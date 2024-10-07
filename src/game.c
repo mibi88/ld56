@@ -132,9 +132,9 @@ void game_init(Game *game, int width, int height, int hills,
     game->stat = overview_get_stats(game->anthills+game->cursor);
     game->seed = seed;
     game->beforetick = 0;
-    game->seed_len = 0;
     game->tutorial_screen = 0;
-    memset(game->seed_str, 0, SEED_MAX+1);
+    strcpy(game->seed_str, "0");
+    game->seed_len = strlen(game->seed_str);
 }
 
 void game_reset(Game *game, unsigned int seed) {
@@ -459,7 +459,7 @@ void game_draw(Game *game) {
         case S_DECLARE_WAR:
             gfx_draw_sprite(&game->bg, 0, 0);
             gfx_draw_string(&game->font, 32, 5, "--- Attack! ---");
-            sprintf(buffer, "Ants: %d", game->anthills[game->cursor].antnum);
+            sprintf(buffer, "Ants: %d", game->anthills->antnum);
             gfx_draw_string(&game->font, 32, 5+8, buffer);
             sprintf(buffer, "Free: %d", game->stat.free);
             gfx_draw_string(&game->font, 32, 5+16, buffer);
@@ -497,12 +497,12 @@ void game_draw(Game *game) {
             gfx_draw_string(&game->font,
                 WIDTH/2-(strlen("game")*8)/2, HEIGHT-72-5,
                 "game");
-            sprintf(buffer, "Seed: %d", atoi(game->seed_str));
+            sprintf(buffer, "Seed: %s", game->seed_str);
             gfx_draw_string(&game->font, 32, HEIGHT/2-8, buffer);
             gfx_draw_string(&game->font, 32+48+8*game->seed_len, HEIGHT/2,
                 "^");
             gfx_draw_string(&game->font, WIDTH-9*8-32, HEIGHT/2, "by Mibi88");
-            gfx_draw_string(&game->font, WIDTH-5*8-32, HEIGHT/2-8, "v.1.0");
+            gfx_draw_string(&game->font, WIDTH-7*8-32, HEIGHT/2-8, "v.1.0.1");
             break;
         case S_TUTORIAL:
             gfx_draw_sprite(&game->tutorial, 0, 0);
