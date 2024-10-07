@@ -165,7 +165,7 @@ char game_logic(Game *game, float speed, unsigned int delta) {
     float dx, dy;
     float mx, my;
     int n;
-    char rc;
+    char rc = 0;
     char win;
     seed_char = gfx_char();
     switch(game->screen){

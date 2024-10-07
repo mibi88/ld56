@@ -34,9 +34,15 @@ typedef struct {
     int real_height;
 } Texture;
 
+#if __EMSCRIPTEN__
+typedef struct {
+    char *file;
+} Audio;
+#else
 typedef struct {
     void *chunk;
 } Audio;
+#endif
 
 void gfx_init(void);
 char gfx_load_texture(Texture *texture, char *file, int w, int h);

@@ -5,6 +5,10 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#if __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 char _keys[K_AMOUNT];
 char _quit_asked;
 unsigned int _ms = 0;
@@ -35,7 +39,11 @@ char _key_char;
 void gfx_init(void) {
     const SDL_VideoInfo *info;
     int bpp;
+#if __EMSCRIPTEN__
+    if(SDL_Init(SDL_INIT_VIDEO)){
+#else
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)){
+#endif
         fputs("antwars: SDL_Init failed!\n", stderr);
         exit(EXIT_FAILURE);
     }
@@ -56,21 +64,33 @@ void gfx_init(void) {
     
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     
+#ifndef __EMSCRIPTEN__
     SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+#endif
     
+#if __EMSCRIPTEN__
+    if(!SDL_SetVideoMode(WIDTH, HEIGHT, bpp, SDL_OPENGL | SDL_FULLSCREEN)){
+#else
     if(!SDL_SetVideoMode(1920, 1080, bpp, SDL_OPENGL | SDL_FULLSCREEN)){
+#endif
         fputs("antwars: SDL_SetVideoMode failed!\n", stderr);
         exit(EXIT_FAILURE);
     }
     
+#ifndef __EMSCRIPTEN__
     if(Mix_OpenAudio(44100, AUDIO_U8, 2, 2048) < 0){
         fputs("antwars: SDL_OpenAudio failed!\n", stderr);
         exit(EXIT_FAILURE);
     }
+#endif
     
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glShadeModel(GL_FLAT);
+#if __EMSCRIPTEN__
+    glViewport(0, 0, WIDTH, HEIGHT);
+#else
     glViewport(0, 0, 1920, 1080);
+#endif
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(0, WIDTH, HEIGHT, 0);
@@ -124,17 +144,41 @@ char gfx_load_texture(Texture *texture, char *file, int w, int h) {
     return 0;
 }
 
+#if __EMSCRIPTEN__
+EM_JS(void, _gfx_load_audio, (char *file), {
+    var name = UTF8ToString(file).replace("/", "_").replace(".", "_");
+    eval(name+" = new Audio(UTF8ToString(file));");
+})
+#endif
+
 char gfx_load_audio(Audio *audio, char *file) {
+#if __EMSCRIPTEN__
+    audio->file = file;
+    _gfx_load_audio(file);
+    return 0;
+#else
     Mix_Chunk *chunk;
     chunk = Mix_LoadWAV(file);
     audio->chunk = chunk;
     if(!chunk) return 1;
     return 0;
+#endif
 }
 
+#if __EMSCRIPTEN__
+EM_JS(void, _gfx_play_audio, (char *file), {
+    var name = UTF8ToString(file).replace("/", "_").replace(".", "_");
+    eval(name+".play();");
+})
+#endif
+
 void gfx_play_audio(Audio *audio) {
+#if __EMSCRIPTEN__
+    _gfx_play_audio(audio->file);
+#else
     if(!audio->chunk) return;
     Mix_PlayChannel(-1, audio->chunk, 0);
+#endif
 }
 
 void gfx_draw_sprite_opt(Texture *texture, float x, float y, float rx,
